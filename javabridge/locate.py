@@ -70,110 +70,13 @@ logger = logging.getLogger(__name__)
 
 def find_javahome():
     """Find JAVA_HOME if it doesn't exist"""
-    if 'JAVA_HOME' in os.environ:
-        return os.environ['JAVA_HOME']
-    elif is_mac:
-        # Use the "java_home" executable to find the location
-        # see "man java_home"
-        libc = ctypes.CDLL("/usr/lib/libc.dylib")
-        if sys.maxsize <= 2**32:
-            arch = "i386"
-        else:
-            arch = "x86_64"
-        try:
-            result = subprocess.check_output(["/usr/libexec/java_home", "--arch", arch])
-            path = result.strip().decode("utf-8")
-            for place_to_look in (
-                os.path.join(os.path.dirname(path), "Libraries"),
-                os.path.join(path, "jre", "lib", "server")):
-                # In "Java for OS X 2015-001" libjvm.dylib is a symlink to libclient.dylib
-                # which is i686 only, whereas libserver.dylib contains both architectures.
-                for file_to_look in ('libjvm.dylib',
-                                     'libclient.dylib',
-                                     'libserver.dylib'):
-                    lib = os.path.join(place_to_look, file_to_look)
-                    #
-                    # dlopen_preflight checks to make sure the dylib
-                    # can be loaded in the current architecture
-                    #
-                    if os.path.exists(lib) and \
-                       libc.dlopen_preflight(lib.encode('utf-8')) != 0:
-                        return path
-            else:
-                logger.error("Could not find Java JRE compatible with %s architecture" % arch)
-                if arch == "i386":
-                    logger.error(
-                        "Please visit https://support.apple.com/kb/DL1572 for help\n"
-                        "installing Apple legacy Java 1.6 for 32 bit support.")
-                return None
-        except:
-            logger.error("Failed to run /usr/libexec/java_home, defaulting to best guess for Java", exc_info=1)
-        return "/System/Library/Frameworks/JavaVM.framework/Home"
-    elif is_linux:
-        def get_out(cmd):
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            o, ignore = p.communicate()
-            if p.poll() != 0:
-                raise Exception("Error finding javahome on linux: %s" % cmd)
-            o = o.strip().decode('utf-8')
-            return o
-        java_bin = get_out(["bash", "-c", "type -p java"])
-        java_dir = get_out(["readlink", "-f", java_bin])
-        java_version_string = get_out(["bash", "-c", "java -version"])
-        if re.search('^openjdk', java_version_string, re.MULTILINE) is not None:
-            pattern = 'openjdk version "([^"]+)"'
-            match = re.search(pattern, java_version_string, re.MULTILINE)
-            if match:
-                version = match.groups()[0]
-                if version < "1.8":
-                    jdk_dir = os.path.join(java_dir, "..", "..", "..")
-                else:
-                    jdk_dir = os.path.join(java_dir, "..", "..")
-            else:
-                raise RuntimeError("Failed to parse version from %s" % 
-                                   java_version_string)
-        elif re.search('^java', java_version_string, re.MULTILINE) is not None:
-            jdk_dir = os.path.join(java_dir, "..", "..")
-        else:
-            raise RuntimeError(
-                "Failed to determine JDK vendor. "
-                "OpenJDK and Oracle JDK are supported."
-            )
-        jdk_dir = os.path.abspath(jdk_dir)
-        return jdk_dir
-    elif is_win:
-        # Registry keys changed in 1.9
-        # https://docs.oracle.com/javase/9/migrate/toc.htm#GUID-EEED398E-AE37-4D12-AB10-49F82F720027
-        java_key_paths = (
-            'SOFTWARE\\JavaSoft\\JRE',
-            'SOFTWARE\\JavaSoft\\Java Runtime Environment',
-            'SOFTWARE\\JavaSoft\\JDK'
-        )
-        for java_key_path in java_key_paths:
-            looking_for = java_key_path
-            try:
-                kjava = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, java_key_path)
-                looking_for = java_key_path + "\\CurrentVersion"
-                kjava_values = dict([winreg.EnumValue(kjava, i)[:2]
-                                     for i in range(winreg.QueryInfoKey(kjava)[1])])
-                current_version = kjava_values['CurrentVersion']
-                looking_for = java_key_path + '\\' + current_version
-                kjava_current = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                                looking_for)
-                kjava_current_values = dict([winreg.EnumValue(kjava_current, i)[:2]
-                                             for i in range(winreg.QueryInfoKey(kjava_current)[1])])
-                return kjava_current_values['JavaHome']
-            except WindowsError as e:
-                if e.errno == 2:
-                    continue
-                else:
-                    raise
-
-        raise RuntimeError(
-            "Failed to find the Java Runtime Environment. "
-            "Please download and install the Oracle JRE 1.6 or later"
-        )
-
+    # if 'JAVA_HOME' in os.environ:
+    #     return os.environ['JAVA_HOME']
+    if True:
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from download_java import download_java
+        jre_path = download_java()
+        return jre_path
 
 def find_jdk():
     """Find the JDK under Windows"""
@@ -259,3 +162,10 @@ def find_jre_bin_jdk_so():
                     if os.path.isfile(jvm_so):
                         return (jre_bin, jvm_so)
     return (jre_bin, None)
+
+if __name__ == '__main__':
+    jdk_path = find_jdk()
+    jre_path = find_javahome()
+
+    print(jdk_path)
+    print(jre_path)

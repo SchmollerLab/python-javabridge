@@ -4,6 +4,7 @@
 /_javabridge_nomac.c
 *.pyc
 *.pyd
+/javabridge/test_auto_install.py
 /javabridge/jars/*java2cpython.*
 /javabridge/*.so
 /python_javabridge.egg-info
@@ -18,3 +19,4 @@
 /javabridge.egg-info
 /javabridge/_version.py
 .coverage
+.eggs

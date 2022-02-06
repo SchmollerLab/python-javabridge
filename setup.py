@@ -382,12 +382,15 @@ if __name__ == '__main__':
     setup(name="javabridge",
           version=get_version(),
           description="Python wrapper for the Java Native Interface",
-          long_description='''The python-javabridge package makes it easy to start a Java virtual
+          long_description='''Fork of python-javabridge developed by the CellProfiler
+image analysis software. The only difference is that it includes automatic download
+of java if not already installed on the target computer.
+The python-javabridge package makes it easy to start a Java virtual
 machine (JVM) from Python and interact with it. Python code can
 interact with the JVM using a low-level API or a more convenient
 high-level API. Python-javabridge was developed for and is used by the
 cell image analysis software CellProfiler (cellprofiler.org).''',
-          url="http://github.com/CellProfiler/python-javabridge/",
+          url="https://github.com/SchmollerLab/python-javabridge-acdc",
           packages=['javabridge', 'javabridge.tests'],
           classifiers=['Development Status :: 5 - Production/Stable',
                        'License :: OSI Approved :: BSD License',
@@ -397,7 +400,7 @@ cell image analysis software CellProfiler (cellprofiler.org).''',
                        ],
           license='BSD License',
           setup_requires=['cython', 'numpy'],
-          install_requires=['numpy'],
+          install_requires=['numpy', 'requests', 'tqdm'],
           tests_require="nose",
           entry_points={'nose.plugins.0.10': [
                 'javabridge = javabridge.noseplugin:JavabridgePlugin'
