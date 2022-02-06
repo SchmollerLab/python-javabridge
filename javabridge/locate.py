@@ -90,33 +90,10 @@ def find_jdk():
     if is_mac:
         return find_javahome()
     if is_win:
-        # Registry keys changed in 1.9
-        # https://docs.oracle.com/javase/9/migrate/toc.htm#GUID-EEED398E-AE37-4D12-AB10-49F82F720027
-        jdk_key_paths = (
-            'SOFTWARE\\JavaSoft\\JDK',
-            'SOFTWARE\\JavaSoft\\Java Development Kit',
-        )
-        for jdk_key_path in jdk_key_paths:
-            try:
-                kjdk = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, jdk_key_path)
-                kjdk_values = dict([winreg.EnumValue(kjdk, i)[:2]
-                                     for i in range(winreg.QueryInfoKey(kjdk)[1])])
-                current_version = kjdk_values['CurrentVersion']
-                kjdk_current = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                               jdk_key_path + '\\' + current_version)
-                kjdk_current_values = dict([winreg.EnumValue(kjdk_current, i)[:2]
-                                            for i in range(winreg.QueryInfoKey(kjdk_current)[1])])
-                return kjdk_current_values['JavaHome']
-            except WindowsError as e:
-                if e.errno == 2:
-                    continue
-                else:
-                    raise
-
-        raise RuntimeError(
-            "Failed to find the Java Development Kit. "
-            "Please download and install the Oracle JDK 1.6 or later"
-        )
+        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+        from download_java import download_jdk
+        jdk_path = download_jdk()
+        return jdk_path
 
 def find_javac_cmd():
     """Find the javac executable"""

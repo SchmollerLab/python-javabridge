@@ -59,8 +59,34 @@ def extract_zip(zip_path, extract_to_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to_path)
 
+def download_jdk():
+    """Download Java JDK (Windows) to user path ~/.acdc-java"""
+
+    file_id = '1pfpq_d4l3UMSN0075h4yflBlmSfUatwL'
+    file_size = 135524352
+    foldername = 'win64'
+    jdk_name = 'jdk1.8.0_321'
+
+    user_path = str(Path.home())
+    java_path = os.path.join(user_path, '.acdc-java', foldername)
+    jdk_path = os.path.join(java_path, jdk_name)
+    zip_dst = os.path.join(java_path, 'jdk_temp.zip')
+
+    if os.path.exists(jdk_path):
+        return jdk_path
+
+    download_from_gdrive(
+        file_id, zip_dst, file_size=file_size, model_name='JDK'
+    )
+    exctract_to = java_path
+    extract_zip(zip_dst, exctract_to)
+    # Remove downloaded zip archive
+    os.remove(zip_dst)
+    print('Java Development Kit downloaded successfully')
+    return jdk_path
+
 def download_java():
-    """Download Java and JDK to user path ~/.acdc-java"""
+    """Download Java JRE to user path ~/.acdc-java"""
 
     is_linux = sys.platform.startswith('linux')
     is_mac = sys.platform == 'darwin'
@@ -112,3 +138,6 @@ def download_java():
 if __name__ == '__main__':
     jre_path = download_java()
     print(jre_path)
+
+    jdk_path = download_jdk()
+    print(jdk_path)
