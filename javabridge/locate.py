@@ -70,9 +70,9 @@ logger = logging.getLogger(__name__)
 
 def find_javahome():
     """Find JAVA_HOME if it doesn't exist"""
-    # if 'JAVA_HOME' in os.environ:
-    #     return os.environ['JAVA_HOME']
-    if True:
+    if 'JAVA_HOME' in os.environ:
+        return os.environ['JAVA_HOME']
+    else:
         sys.path.append(os.path.dirname(os.path.abspath(__file__)))
         from download_java import download_java
         jre_path = download_java()
