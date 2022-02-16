@@ -51,6 +51,11 @@ def save_response_content(response, destination, file_size=None,
                 if progress is not None:
                     progress.emit(-1, len(chunk))
     pbar.close()
+
+    # Move to destination and delete temp folder
+    destination_dir = os.path.dirname(destination)
+    if not os.path.exists(destination_dir):
+        os.makedirs(destination_dir)
     shutil.move(temp_dst, destination)
     shutil.rmtree(temp_folder)
 
@@ -68,7 +73,7 @@ def download_jdk():
     jdk_name = 'jdk1.8.0_321'
 
     user_path = str(Path.home())
-    java_path = os.path.join(user_path, '.acdc-java', foldername)
+    java_path = os.path.join(user_path, 'acdc-java', foldername)
     jdk_path = os.path.join(java_path, jdk_name)
     zip_dst = os.path.join(java_path, 'jdk_temp.zip')
 
@@ -115,7 +120,7 @@ def download_java():
         return
 
     user_path = str(Path.home())
-    java_path = os.path.join(user_path, '.acdc-java', foldername)
+    java_path = os.path.join(user_path, 'acdc-java', foldername)
     jre_path = os.path.join(java_path, jre_name)
     zip_dst = os.path.join(java_path, 'java_temp.zip')
 
