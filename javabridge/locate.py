@@ -75,7 +75,7 @@ def find_javahome():
     else:
         sys.path.append(os.path.dirname(os.path.abspath(__file__)))
         from download_java import download_java
-        jre_path = download_java()
+        jre_path, _ = download_java()
         return jre_path
 
 def find_jdk():
@@ -92,7 +92,7 @@ def find_jdk():
     if is_win:
         sys.path.append(os.path.dirname(os.path.abspath(__file__)))
         from download_java import download_jdk
-        jdk_path = download_jdk()
+        _, jdk_path = download_jdk()
         return jdk_path
 
 def find_javac_cmd():
