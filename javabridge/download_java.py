@@ -4,14 +4,12 @@ import tempfile
 import shutil
 import zipfile
 
-from tqdm import tqdm
 from pathlib import Path
-from requests import Session
 
 def download_from_gdrive(id, destination, file_size=None,
                          model_name='cellpose', progress=None):
     URL = "https://docs.google.com/uc?export=download"
-
+    from requests import Session
     session = Session()
 
     with session.get(URL, params = { 'id' : id }, stream = True) as response:
@@ -34,6 +32,11 @@ def get_confirm_token(response):
 def save_response_content(response, destination, file_size=None,
                           model_name='cellpose', progress=None):
     print(f'Downloading {model_name} to: {os.path.dirname(destination)}')
+    try:
+        from tqdm import tqdm
+        TQDM_FOUND = True
+    except ModuleNotFoundError:
+        TQDM_FOUND = False
     CHUNK_SIZE = 32768
     temp_folder = tempfile.mkdtemp()
     if not os.path.exists(temp_folder):
@@ -41,16 +44,23 @@ def save_response_content(response, destination, file_size=None,
     temp_dst = os.path.join(temp_folder, os.path.basename(destination))
     if file_size is not None and progress is not None:
         progress.emit(file_size, -1)
-    pbar = tqdm(total=file_size, unit='B', unit_scale=True,
-                unit_divisor=1024, ncols=100)
+    if TQDM_FOUND:
+        pbar = tqdm(
+            total=file_size, unit='B', unit_scale=True,
+            unit_divisor=1024, ncols=100
+        )
+    else:
+        pbar = None
     with open(temp_dst, "wb") as f:
         for chunk in response.iter_content(CHUNK_SIZE):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
-                pbar.update(len(chunk))
+                if pbar is not None:
+                    pbar.update(len(chunk))
                 if progress is not None:
                     progress.emit(-1, len(chunk))
-    pbar.close()
+    if pbar is not None:
+        pbar.close()
 
     # Move to destination and delete temp folder
     destination_dir = os.path.dirname(destination)
@@ -70,8 +80,8 @@ def get_jdk_info():
     foldername = 'win64'
     jdk_name = 'jdk1.8.0_321'
 
-    user_path = str(Path.home())
-    java_path = os.path.join(user_path, 'acdc-java', foldername)
+    acdc_java_path, dot_acdc_java_path = get_acdc_java_path()
+    java_path = os.path.join(acdc_java_path, foldername)
     jdk_path = os.path.join(java_path, jdk_name)
     return java_path, jdk_path, file_id, file_size
 
@@ -84,6 +94,14 @@ def download_jdk():
     if os.path.exists(jdk_path):
         return jdk_path
 
+    # Also check the older .acdc-java
+    jdk_name = os.path.basename(jdk_path)
+    os_foldername = os.path.basename(os.path.dirname(jdk_path))
+    _, dot_acdc_java_path = get_acdc_java_path()
+    jdk_old_path = os.path.join(dot_acdc_java_path, os_foldername, jdk_name)
+    if os.path.exists(jdk_old_path):
+        return jdk_old_path
+
     download_from_gdrive(
         file_id, zip_dst, file_size=file_size, model_name='JDK'
     )
@@ -93,6 +111,12 @@ def download_jdk():
     os.remove(zip_dst)
     print('Java Development Kit downloaded successfully')
     return jdk_path
+
+def get_acdc_java_path():
+    user_path = str(Path.home())
+    acdc_java_path = os.path.join(user_path, 'acdc-java')
+    dot_acdc_java_path = os.path.join(user_path, '.acdc-java')
+    return acdc_java_path, dot_acdc_java_path
 
 def get_java_info():
     is_linux = sys.platform.startswith('linux')
@@ -121,13 +145,13 @@ def get_java_info():
         jre_name = 'jre1.8.0_301'
         return
 
-    user_path = str(Path.home())
-    java_path = os.path.join(user_path, 'acdc-java', foldername)
+    acdc_java_path, dot_acdc_java_path = get_acdc_java_path()
+    java_path = os.path.join(acdc_java_path, foldername)
     jre_path = os.path.join(java_path, jre_name)
     return java_path, jre_path, file_id, file_size
 
 def download_java():
-    """Download Java JRE to user path ~/.acdc-java"""
+    """Download Java JRE to user path ~/acdc-java"""
 
     java_path, jre_path, file_id, file_size = get_java_info()
 
@@ -135,6 +159,14 @@ def download_java():
 
     if os.path.exists(jre_path):
         return jre_path
+
+    # Also check the older .acdc-java
+    jre_name = os.path.basename(jre_path)
+    os_foldername = os.path.basename(os.path.dirname(jre_path))
+    _, dot_acdc_java_path = get_acdc_java_path()
+    jre_old_path = os.path.join(dot_acdc_java_path, os_foldername, jre_name)
+    if os.path.exists(jre_old_path):
+        return jre_old_path
 
     if not os.path.exists(java_path):
         os.makedirs(java_path)
