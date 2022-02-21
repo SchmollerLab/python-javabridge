@@ -69,19 +69,13 @@ if is_win:
 logger = logging.getLogger(__name__)
 
 def find_javahome():
-    """Find JAVA_HOME if it doesn't exist"""
-    if 'JAVA_HOME' in os.environ:
-        return os.environ['JAVA_HOME']
-    else:
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        from download_java import download_java
-        jre_path, _ = download_java()
-        return jre_path
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from download_java import download_java
+    jre_path, _ = download_java()
+    return jre_path
 
 def find_jdk():
     """Find the JDK under Windows"""
-    if 'JDK_HOME' in os.environ:
-        return os.environ['JDK_HOME']
     if is_linux:
         jdk_home = find_javahome()
         if jdk_home.endswith("jre") or jdk_home.endswith("jre/"):
