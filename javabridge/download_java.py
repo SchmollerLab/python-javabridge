@@ -3,8 +3,53 @@ import os
 import tempfile
 import shutil
 import zipfile
-
 import pathlib
+import subprocess
+
+try:
+    import requests
+except ModuleNotFoundError:
+    subprocess.check_call(
+        [sys.executable, '-m', 'pip', 'install', 'requests']
+    )
+
+try:
+    from tqdm import tqdm
+except ModuleNotFoundError:
+    subprocess.check_call(
+        [sys.executable, '-m', 'pip', 'install', 'tqdm']
+    )
+
+import requests
+from tqdm import tqdm
+
+def download_url(
+        url, dst, desc='', file_size=None, verbose=True, progress=None
+    ):
+    CHUNK_SIZE = 32768
+    if verbose:
+        print(f'Downloading {desc} to: {os.path.dirname(dst)}')
+    response = requests.get(url, stream=True, timeout=20)
+    if file_size is not None and progress is not None:
+        progress.emit(file_size, -1)
+    pbar = tqdm(
+        total=file_size, unit='B', unit_scale=True,
+        unit_divisor=1024, ncols=100
+    )
+    with open(dst, 'wb') as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            # if chunk:
+            f.write(chunk)
+            pbar.update(len(chunk))
+            if progress is not None:
+                progress.emit(-1, len(chunk))
+    pbar.close()
+
+def extract_zip(zip_path, extract_to_path, verbose=True):
+    if verbose:
+        print(f'Extracting to {extract_to_path}...')
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to_path)
 
 def get_acdc_java_path():
     user_path = str(pathlib.Path.home())

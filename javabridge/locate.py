@@ -71,7 +71,7 @@ logger = logging.getLogger(__name__)
 def find_javahome():
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     from download_java import download_java
-    jre_path, _ = download_java()
+    jre_path, _, url = download_java()
     return jre_path
 
 def find_jdk():
@@ -85,8 +85,8 @@ def find_jdk():
         return find_javahome()
     if is_win:
         sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        from download_java import download_jdk
-        _, jdk_path = download_jdk()
+        from download_java import download_java
+        _, jdk_path, url = download_java()
         return jdk_path
 
 def find_javac_cmd():
