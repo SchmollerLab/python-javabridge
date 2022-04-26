@@ -158,7 +158,7 @@ def download_java():
         shutil.move(src, os_acdc_java_path)
 
     try:
-        os.remove(unzipped_path)
+        shutil.rmtree(unzipped_path)
     except PermissionError as e:
         pass
 
