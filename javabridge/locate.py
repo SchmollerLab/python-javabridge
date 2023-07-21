@@ -70,7 +70,14 @@ logger = logging.getLogger(__name__)
 
 def find_javahome():
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from download_java import download_java
+    try:
+        from cellacdc.myutils import download_java
+    except ModuleNotFoundError as err:
+        print(err)
+        print('*'*60)
+        print('`javabridge` requires the Cell-ACDC package. Please install it with `pip install cellacdc`. Thank you for your patience!')
+        print('-'*60)
+        exit()
     jre_path, _, url = download_java()
     return jre_path
 
@@ -84,9 +91,15 @@ def find_jdk():
     if is_mac:
         return find_javahome()
     if is_win:
-        sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-        from download_java import download_java
-        _, jdk_path, url = download_java()
+        try:
+            from cellacdc.myutils import download_java
+        except ModuleNotFoundError as err:
+            print(err)
+            print('*'*60)
+            print('`javabridge` requires the Cell-ACDC package. Please install it with `pip install cellacdc`. Thank you for your patience!')
+            print('-'*60)
+            exit()
+        jre_path, jdk_path, url = download_java()
         return jdk_path
 
 def find_javac_cmd():
