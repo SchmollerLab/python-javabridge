@@ -337,6 +337,9 @@ def pep440_compliant(ver):
 
 
 def get_version():
+    # Since Cell-ACDC v1.4.0 we need to upgrade javabridge to something greater 
+    # than 1.0.19 so we force 1.0.20
+    return '1.0.20'
     """Get version from git or file system.
 
     If this is a git repository, try to get the version number by
